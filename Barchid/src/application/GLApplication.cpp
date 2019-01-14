@@ -60,20 +60,17 @@ GLApplication::GLApplication() {
 
     // QUESTION 17
     _trianglePosition = {
-      // triangle 1
       -0.8,-0.8,0.0,
       -0.8,0.8,0.0,
-      -0.4,-0.8,0.0,
 
-      // triangle 2
+      -0.4,-0.8,0.0,
       -0.4,0.8,0.0,
+
       0.0,-0.8,0.0,
       0.0,0.8,0.0,
 
-      // triangle 3
       0.4,-0.8,0.0,
       0.4,0.8,0.0,
-      0.8,-0.8,0.0,
     };
     // tous les sommets à rouge :
     _triangleColor.clear();
@@ -88,6 +85,8 @@ GLApplication::GLApplication() {
     // triangle 2
     2,1,4
   };
+
+  this->initStrip(4,-0.8,0.4,-0.8,0.8);
 }
 
 /**
@@ -101,8 +100,28 @@ GLApplication::GLApplication() {
  */
 void GLApplication::initStrip(int nbSlice,float xmin,float xmax,float ymin,float ymax) {
     _trianglePosition.clear();
-    for (unsigned int i = 0; i < nbSlice; ++i) {
+    _triangleColor.clear();
 
+    float step = xmin;
+    for (unsigned int i = 0; i < nbSlice; i++) {
+        // point du bas de la ligne
+        _trianglePosition.push_back(step); // x
+        _trianglePosition.push_back(ymin); // y
+        _trianglePosition.push_back(0.0); // z
+
+        // point du haut de la ligne
+        _trianglePosition.push_back(step); // x
+        _trianglePosition.push_back(ymax); // y
+        _trianglePosition.push_back(0.0); //z
+
+        // couleurs
+        // en bleu
+        _triangleColor.push_back(0);_triangleColor.push_back(0);_triangleColor.push_back(1);_triangleColor.push_back(1);
+
+        // en vert
+        _triangleColor.push_back(0);_triangleColor.push_back(1);_triangleColor.push_back(0);_triangleColor.push_back(1);
+
+        step = step + abs(xmax-xmin)/(nbSlice);
     }
 }
 
@@ -113,7 +132,7 @@ void GLApplication::initialize() {
   glClearColor(1,1,1,1); // couleur du clear
 
   glLineWidth(2.0); // epaisseur des lignes tracées
-  glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
 
   _shader0=initProgram("simple");
@@ -160,7 +179,7 @@ void GLApplication::draw() {
 
   // on dessine le triangle (3 premiers vec3 dans le VBO --> les 3 positions du sommet)
 //  glDrawArrays(GL_TRIANGLES,0,9);
-  glDrawArrays(GL_TRIANGLE_STRIP,0,8);
+  glDrawArrays(GL_TRIANGLE_STRIP,0, _trianglePosition.size());
 //    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
   // eviter les effets de bords
   glBindVertexArray(0);
