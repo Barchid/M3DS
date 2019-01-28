@@ -134,9 +134,23 @@ void BasicMesh::initObj(const ObjLoader &obj) {
     // - obj.normalVertex(i,j) = normale du j-ème sommet dans le i-ième triangle (de type Vector3)
     for(unsigned int i=0;i<obj.nbFace();++i) {
         for(unsigned int j=0;j<3;++j) {
+            Vector3 v = obj.positionVertex(i,j);
+            Vector3 c = obj.normalVertex(i, j);
 
-            // TODO
-
+            _attribute.push_back(v.x());
+            _attribute.push_back(v.y());
+            _attribute.push_back(v.z());
+// Q 22 : désactiver le report dans 0,1
+//            float x = (c.x() - -1)/(1 - -1);
+//            float y = (c.y() - -1)/(1 - -1);
+//            float z = (c.z() - -1)/(1 - -1);
+//            _attribute.push_back(x);
+//            _attribute.push_back(y);
+//            _attribute.push_back(z);
+            // Q 22 : faire normal
+            _attribute.push_back(c.x());
+            _attribute.push_back(c.x());
+            _attribute.push_back(c.x());
         }
     }
 
@@ -152,9 +166,10 @@ void BasicMesh::initBuffer() {
 
 
     // indexed face set
-    glGenBuffers(1,&_elementBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,_element.size()*sizeof(unsigned int),_element.data(),GL_STATIC_DRAW);
+    // Q 16 : devient inutile, on bosse avec un cube
+    //    glGenBuffers(1,&_elementBuffer);
+    //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_elementBuffer);
+    //    glBufferData(GL_ELEMENT_ARRAY_BUFFER,_element.size()*sizeof(unsigned int),_element.data(),GL_STATIC_DRAW);
 
 }
 
@@ -177,7 +192,8 @@ void BasicMesh::initVAO() {
     glEnableVertexAttribArray(1);
     // END TODO
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_elementBuffer);
+    // Q 16 : devient inutile
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_elementBuffer);
 
     glBindVertexArray(0);
 }
@@ -191,7 +207,9 @@ void BasicMesh::initDraw() {
 void BasicMesh::draw() {
     glBindVertexArray(_vao);
 
-    glDrawElements(GL_TRIANGLES,_element.size(),GL_UNSIGNED_INT,(const GLvoid *)(0*sizeof(GLuint)));
+    // Q16 : on remplace draw elements par draw arrays
+    glDrawArrays(GL_TRIANGLES,0,_attribute.size());
+    //    glDrawElements(GL_TRIANGLES,_element.size(),GL_UNSIGNED_INT,(const GLvoid *)(0*sizeof(GLuint)));
 
     glBindVertexArray(0);
 }
