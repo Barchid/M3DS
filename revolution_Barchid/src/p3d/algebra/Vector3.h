@@ -16,8 +16,8 @@
 #include <cmath>
 
 namespace p3d {
-  class Vector4;
-  class Vector2;
+class Vector4;
+class Vector2;
 
 /**
 @class Vector3
@@ -37,44 +37,48 @@ double toRadian(double a);
 class Vector3
 {
 
-  double _c[3];
-  static float _fc[3]; // for casting
+    double _c[3];
+    static float _fc[3]; // for casting
 
 public:
-  /// @brief destructor
-  ~Vector3();
-  /// copy
-  Vector3 &operator=(const Vector3 &u);
-  /// @brief default constructor
-  Vector3();
-  /// @brief copy constructor
-  Vector3(const Vector3 &t);
+    // ajouté par Sami
+    ///  @brief returns the average of the current vector with the vector in parameter
+    Vector3 averageVec(Vector3 other);
+
+    /// @brief destructor
+    ~Vector3();
+    /// copy
+    Vector3 &operator=(const Vector3 &u);
+    /// @brief default constructor
+    Vector3();
+    /// @brief copy constructor
+    Vector3(const Vector3 &t);
 
     /// @brief constructs the vector (x,y,z)
-  explicit Vector3(double x,double y,double z=0.0);
-  Vector3(const p3d::Vector2 &p,double z) :Vector3(p.x(),p.y(),z) {}
+    explicit Vector3(double x,double y,double z=0.0);
+    Vector3(const p3d::Vector2 &p,double z) :Vector3(p.x(),p.y(),z) {}
 
-  /// @brief construct from 2 points (a,b) (the vector b-a)
-  Vector3(const Vector3 &a,const Vector3 &b);
-  /// returns the i-th element
-  inline double &operator()(int i) {return _c[i];}
-  /// returns the i-th element
-  inline const double &operator()(int i) const {return _c[i];}
-  /// @brief get X
-  inline double x() const {return _c[0];}
-  inline double r() const {return _c[0];}
-  /// @brief get Y
-  inline double y() const {return _c[1];}
-  inline double g() const {return _c[1];}
-  /// @brief get Z
-  inline double z() const {return _c[2];}
-  inline double b() const {return _c[2];}
+    /// @brief construct from 2 points (a,b) (the vector b-a)
+    Vector3(const Vector3 &a,const Vector3 &b);
+    /// returns the i-th element
+    inline double &operator()(int i) {return _c[i];}
+    /// returns the i-th element
+    inline const double &operator()(int i) const {return _c[i];}
+    /// @brief get X
+    inline double x() const {return _c[0];}
+    inline double r() const {return _c[0];}
+    /// @brief get Y
+    inline double y() const {return _c[1];}
+    inline double g() const {return _c[1];}
+    /// @brief get Z
+    inline double z() const {return _c[2];}
+    inline double b() const {return _c[2];}
 
-  /// @brief returns Vector2
-  inline Vector2 xy() const {return Vector2(_c[0],_c[1]);}
+    /// @brief returns Vector2
+    inline Vector2 xy() const {return Vector2(_c[0],_c[1]);}
 
-  /// @brief if this is (close to) 0
-  bool isZero(double epsilon=0.00001) {return length2()<epsilon;}
+    /// @brief if this is (close to) 0
+    bool isZero(double epsilon=0.00001) {return length2()<epsilon;}
 
     /// @brief set this with b-a (a and b interpreted as points).
     void setVector(const Vector3 &a,const Vector3 &b);

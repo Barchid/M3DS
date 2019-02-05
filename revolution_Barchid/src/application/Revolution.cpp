@@ -26,7 +26,7 @@ void Revolution::initSphere() {
     vector<float> p;
     vector<float> n;
     vector<float> t;
-    vector<float> tTemp;
+    vector<float> tTemp; // utilisé pour initialiser les coordonnées de textures (quick fix dégueu)
 
     vector<unsigned int> index;
 
@@ -116,8 +116,17 @@ void Revolution::initCube() {
 
     // *******
     //  TODO
-
-
+    // creation des positions du cube
+    p = {
+        -1, -1, -1,
+        -1,  1, -1,
+        -1, -1,  1,
+        -1,  1,  1,
+         1,  1,  1,
+         1,  1, -1,
+         1, -1,  1,
+         1, -1, -1
+    };
 
 
     // *******
@@ -137,6 +146,7 @@ void Revolution::initRevolution() {
     vector<float> p;
     vector<float> n;
     vector<float> t;
+    vector<float> tTemp; // utilisé pour initialiser les coordonnées de textures (quick fix dégueu)
 
     vector<unsigned int> index;
 
@@ -145,10 +155,70 @@ void Revolution::initRevolution() {
 
     std::vector<Vector3> normalProfile; // to compute normal profile
 
+    Vector3 A; // va nous servir pour effectuer la rotation des points du profil
+
     // *******
     //  TODO
 
+    // calcul des normales des segments du profile
+    for (unsigned int i = 0; i < _profile.size()-1; ++i) {
+        Vector3 orthogonal;
+        Vector3 dir =_profile[i+1]-_profile[i];
+        orthogonal.x(dir.y());
+        orthogonal.y(-dir.x());
+        orthogonal.z(0);
 
+        normalProfile.push_back(orthogonal); // normal du dernier point du profile est uniquement la direction de ce point
+    }
+
+    float fi = 0;
+    // initialiser les coordonnées des sommets pour l'objet de révolution
+    for (int i = 0; i < nbStack; ++i) {
+        Vector3 normaleToAverage1; // vecteur représentant la premiere normale servant à calculer la normale moyenne pour chaque point
+        Vector3 normaleToAverage2; // vecteur représentant la deuxième normale servant à calculer la normale moyenne pour chaque point
+
+        if(i==nbStack-1) { // si je suis le dernier, ma normale est le segment d'avant
+            normaleToAverage1 = normalProfile[i - 1];
+            normaleToAverage2 = normalProfile[i - 1];
+        }
+        if(i==0) { // si je suis le premier point, ma normale n'a pas de moyenne (une moyenne de deux fois la même chose reste la même chose)
+            normaleToAverage1 = normalProfile[0];
+            normaleToAverage2 = normalProfile[0];
+        }
+        else {
+            normaleToAverage1 = normalProfile[i];
+            normaleToAverage2 = normalProfile[i - 1];
+        }
+
+        // calcul de la normale pour le point du profile
+        Vector3 normale = (normaleToAverage1 + normaleToAverage2) / 2;
+        Vector3 pute;
+
+        float teta = 0;
+        for (int j = 0; j < nbSlice; ++j) {
+            // effectuer la rotation du point du profile
+            A = _profile[i].rotationY(teta);
+            pute = normale.rotationY(teta); // faire une rotation de la normale
+
+            // ajouter les coordonnées du point rotaté (??????)
+            p.push_back(A.x());
+            p.push_back(A.y());
+            p.push_back(A.z());
+
+            n.push_back(pute.x());
+            n.push_back(pute.y());
+            n.push_back(pute.z()); // ce sera toujours 0 de toute façon
+
+            // coordonnées de texture
+            float sCoord = teta/(2.0*M_PI);
+            float tCoord = ((double)(nbStack - 1) - (double)i) / ((double)(nbStack - 1));
+            t.push_back(sCoord);
+            t.push_back(tCoord);
+
+            teta += (2.0*M_PI)/(nbSlice-1);
+        }
+        fi += M_PI / (nbStack -1);
+    }
 
     // initialiser les index des positions
     for(int i = 0; i < nbStack-1; i ++) {
@@ -158,12 +228,13 @@ void Revolution::initRevolution() {
             int bottomRight = bottomLeft + 1;
             int topRight = topLeft + 1;
 
-            index.push_back(topLeft);
+            index.push_back(bottomRight);
             index.push_back(bottomLeft);
-            index.push_back(bottomRight);
-            index.push_back(bottomRight);
-            index.push_back(topRight);
             index.push_back(topLeft);
+
+            index.push_back(topLeft);
+            index.push_back(topRight);
+            index.push_back(bottomRight);
         }
     }
     // *******

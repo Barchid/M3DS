@@ -49,6 +49,14 @@ void Vector3::setVector(const Vector3 &a,const Vector3 &b) {
     *this=b-a;
 }
 
+Vector3 Vector3::averageVec(Vector3 other) {
+    float xMoyen = (this->x() + other.x()) / 2;
+    float yMoyen = (this->y() + other.y()) / 2;
+    float zMoyen = (this->z() + other.z()) / 2;
+
+    return *(new Vector3(xMoyen, yMoyen, zMoyen));
+}
+
 
 void swap(int &a,int &b) {
   int c;
