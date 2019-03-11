@@ -22,7 +22,13 @@ Vector3 Curve::evalBezier(double t) {
         vector<Vector3> castel=_pts;      // tableau de points sur lesquels on applique deCasteljau
                                           // on recopie les points de controles dans le tableau castel (castel est donc initialisé avec la première ligne de l'algo triangulaire).
 
-        // A COMPLETER : appliquer la méthode de De Casteljau (évolution du tableau castel)
+        // De CastelJau est en fait une suite d'interpolations linéaires avec un t fixé
+        for (int n = nbPoint(); n > 1; n--) { // on débute par la taille initiale des points
+            for (int k = 0; k < n-1; ++k) {
+                // Application de la formule de récurrence de casteljau
+                castel[i] = (1 - t) * castel[i] + t * castel[i+1];
+            }
+        }
 
 
         // le point de la courbe en t doit se trouver dans castel[0] à la fin de l'algo
