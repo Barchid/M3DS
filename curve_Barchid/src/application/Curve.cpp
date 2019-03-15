@@ -20,11 +20,11 @@ Vector3 Curve::evalBezier(double t) {
     Vector3 result;
     if (nbPoint()>1) {
         vector<Vector3> castel=_pts;      // tableau de points sur lesquels on applique deCasteljau
-                                          // on recopie les points de controles dans le tableau castel (castel est donc initialisé avec la première ligne de l'algo triangulaire).
+        // on recopie les points de controles dans le tableau castel (castel est donc initialisé avec la première ligne de l'algo triangulaire).
 
         // De CastelJau est en fait une suite d'interpolations linéaires avec un t fixé
-        for (int n = nbPoint(); n > 1; n--) { // on débute par la taille initiale des points
-            for (int k = 0; k < n-1; ++k) {
+        for (int k = nbPoint(); k > 1; k--) { // on débute par la taille initiale des points
+            for (int i = 0; i < k-1; ++i) {
                 // Application de la formule de récurrence de casteljau
                 castel[i] = (1 - t) * castel[i] + t * castel[i+1];
             }
@@ -55,30 +55,49 @@ Vector3 Curve::evalCubicBezier(double t) {
             q[i]+=mat[i*4+j]*point(j);
         }
     }
-    res=t*t*t*(-point(0)+3*point(1)-3*point(2)+point(3))+
-        t*t*(3*point(0)-6*point(1)+3*point(2))+
-        t*(-3*point(0)+3*point(1))+
-        point(0);
+    // Creation de courbe de bézier de degré 3
+    res=
+            // t³ a3
+            t*t*t*(-point(0)+3*point(1)-3*point(2)+point(3))+
+            // t² a2
+            t*t*(3*point(0)-6*point(1)+3*point(2))+
+            // t a1
+            t*(-3*point(0)+3*point(1))+
+            // a0
+            point(0);
 
     return res;
 }
 
+// Calculer la vélocité en P[t]
 Vector3 Curve::evalCubicVelocity(double t) {
-  if (_pts.size()!=4) throw Error("Curve should have 4 control points",__LINE__,__FILE__);
-  Vector3 res;
+    if (_pts.size()!=4) throw Error("Curve should have 4 control points",__LINE__,__FILE__);
+    // Application de la formule pour trouver la dérivée d'une courbe de degré 3 (donc la vélocité)
+    Vector3 res =
+            // 3 a3 t²
+            3*(-point(0)+3*point(1)-3*point(2)+point(3))*pow(t,2) +
+            // 2 a2 t
+            2*(3*point(0)-6*point(1)+3*point(2))*t +
+            // a1
+            (-3*point(0)+3*point(1))
+            ;
 
 
-  return res;
+    return res;
 
 }
 
 Vector3 Curve::evalCubicAcceleration(double t) {
-  if (_pts.size()!=4) throw Error("Curve should have 4 control points",__LINE__,__FILE__);
+    if (_pts.size()!=4) throw Error("Curve should have 4 control points",__LINE__,__FILE__);
 
-  Vector3 res;
-
-
-  return res;
+    // Application de la formule pour trouver la dérivée seconde d'une courbe de degré 3 (donc l'accélération)
+    Vector3 res =
+            // 2 * 3 a3 t (car dérivée de la dérivée)
+            2 * 3*(-point(0)+3*point(1)-3*point(2)+point(3))* t +
+            // 2 a2
+            2*(3*point(0)-6*point(1)+3*point(2))
+            ;
+    return res;
 
 }
 
@@ -96,8 +115,8 @@ Curve::~Curve() {
 
 
 void Curve::create(int nb) {
-  _pts.resize(nb);
-  _angle.resize(nb);
+    _pts.resize(nb);
+    _angle.resize(nb);
 }
 
 void Curve::point(int i,const Vector3 &p) {
@@ -107,72 +126,72 @@ void Curve::point(int i,const Vector3 &p) {
 
 
 Matrix4 Curve::frame(double t) {
-  Vector3 p=evalCubicBezier(t);
-  Vector3 tt=evalCubicVelocity(t);
-  Vector3 acc=evalCubicAcceleration(t);
+    Vector3 p=evalCubicBezier(t);
+    Vector3 tt=evalCubicVelocity(t);
+    Vector3 acc=evalCubicAcceleration(t);
 
-  Vector3 B=tt.cross(acc);
+    Vector3 B=tt.cross(acc);
 
 
-  double r=1.0/(B.length()/(tt.length()*tt.length()*tt.length()));
-  tt.normalize();
-  Vector3 bb=normalize(B);
-  Vector3 N=bb.cross(tt);
+    double r=1.0/(B.length()/(tt.length()*tt.length()*tt.length()));
+    tt.normalize();
+    Vector3 bb=normalize(B);
+    Vector3 N=bb.cross(tt);
 
-  Vector3 rN=r*N;
+    Vector3 rN=r*N;
 
-  Vector3 down=normalize(Vector3(0,1,0)+rN);
+    Vector3 down=normalize(Vector3(0,1,0)+rN);
 
-  Vector3 other=tt.cross(down);
+    Vector3 other=tt.cross(down);
 
-  Matrix4 res;
-  res.setFrame(p,tt,down,other);
-      return res;
+    Matrix4 res;
+    res.setFrame(p,tt,down,other);
+    return res;
 }
 
 Matrix4 Curve::tbn(double t,p3d::Vector3 *previousB) {
-  Vector3 p=evalCubicBezier(t);
-  Vector3 tt=evalCubicVelocity(t);
+    Vector3 p=evalCubicBezier(t);
+    Vector3 tt=evalCubicVelocity(t);
 
-  tt.normalize();
-  Vector3 n=previousB->cross(tt);
-  n.normalize();
-  *previousB=normalize(tt.cross(n));
+    tt.normalize();
+    Vector3 n=previousB->cross(tt);
+    n.normalize();
+    *previousB=normalize(tt.cross(n));
 
-  Matrix4 res;
-  res.setFrame(p,tt,*previousB,n);
-  return res;
+    Matrix4 res;
+    res.setFrame(p,tt,*previousB,n);
+    return res;
 }
 
 
 Vector3 Curve::rN(double t) {
-  Vector3 tt=evalCubicVelocity(t);
-  Vector3 acc=evalCubicAcceleration(t);
+    Vector3 tt=evalCubicVelocity(t);
+    Vector3 acc=evalCubicAcceleration(t);
 
-  Vector3 B=tt.cross(acc);
+    Vector3 B=tt.cross(acc);
 
 
-  double r=1.0/(B.length()/(tt.length()*tt.length()*tt.length()));
-  tt.normalize();
-  Vector3 bb=normalize(B);
-  Vector3 N=bb.cross(tt);
-  cout << r << endl;
-  return r*N;
+    double r=1.0/(B.length()/(tt.length()*tt.length()*tt.length()));
+    tt.normalize();
+    Vector3 bb=normalize(B);
+    Vector3 N=bb.cross(tt);
+    cout << r << endl;
+    return r*N;
 }
 
 Vector3 Curve::evalCubicTierce(double t) {
-  if (_pts.size()!=4) throw Error("Curve should have 4 control points",__LINE__,__FILE__);
+    if (_pts.size()!=4) throw Error("Curve should have 4 control points",__LINE__,__FILE__);
 
-  Vector3 res;
+    Vector3 res;
 
 
-  return res;
+    return res;
 
 }
 
 
 void Curve::drawBezier() {
-  if (nbPoint()<2) return;
+    if (nbPoint()<2) return;
 
 
     float pas=1.0/(100.0-1);
@@ -189,25 +208,25 @@ void Curve::drawBezier() {
 
 
 void Curve::drawControl() {
-  vector<Vector3> linePts;
-  glPointSize(10);
-  p3d::shaderVertexAmbient();
-  if (nbPoint()>0) {
-    unsigned int i;
-    for(i=0;i<nbPoint();++i) {
-      linePts.push_back(point(i));
-      p3d::draw(i,point(i)+Vector3(0.01,0.01,0));
+    vector<Vector3> linePts;
+    glPointSize(10);
+    p3d::shaderVertexAmbient();
+    if (nbPoint()>0) {
+        unsigned int i;
+        for(i=0;i<nbPoint();++i) {
+            linePts.push_back(point(i));
+            p3d::draw(i,point(i)+Vector3(0.01,0.01,0));
+        }
+        p3d::drawPoints(linePts);
+        p3d::drawLineStrip(linePts);
     }
-    p3d::drawPoints(linePts);
-    p3d::drawLineStrip(linePts);
-  }
 }
 
 
 
 void Curve::interactInsert(unsigned int i, const Vector3 &insertPoint) {
-  _pts.insert(_pts.begin()+i,insertPoint);
-  _angle.insert(_angle.begin()+i,0.0);
+    _pts.insert(_pts.begin()+i,insertPoint);
+    _angle.insert(_angle.begin()+i,0.0);
 }
 
 
